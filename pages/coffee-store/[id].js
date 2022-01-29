@@ -59,12 +59,34 @@ const CoffeeStore = (props) => {
   } = useContext(StoreContext);
   const [coffeeStore, setCoffeeStore] = useState(props.coffeeStore);
 
+  const handleCreateCoffeeStore = async (data) => {
+    try {
+      const options = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      };
+      const response = await fetch("/api/createCoffeeStore", options);
+      const resData = await response.json();
+      console.log(resData);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     if (isEmpty(props.coffeeStore) && coffeeStores.length > 0) {
       const currStore = coffeeStores.find(
         (store) => store.id.toString() === id
       );
-      setCoffeeStore(currStore);
+      if (currStore) {
+        setCoffeeStore(currStore);
+        handleCreateCoffeeStore(currStore);
+      }
+    } else {
+      handleCreateCoffeeStore(props.coffeeStore);
     }
   }, [coffeeStores, id, props.coffeeStore]);
 
@@ -91,7 +113,9 @@ const CoffeeStore = (props) => {
 
   const { address, name, neighbourhood, imgUrl } = coffeeStore;
 
-  const handleUpvote = () => [console.log("handleUpvote")];
+  const handleUpvote = () => {
+    console.log("handleUpvote");
+  };
 
   return (
     <div className={styles.layout}>

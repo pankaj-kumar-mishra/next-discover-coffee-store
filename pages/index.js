@@ -27,20 +27,27 @@ const Home = (props) => {
   const { isFindingLocation, locationErrMsg, handleTrackLocation } =
     useTrackLocation();
   // const [coffeeStores, setCoffeeStores] = useState([]);
-  const [coffeeStoresError, setCoffeeStoresError] = useState(null);
+  const [coffeeStoresError, setCoffeeStoresError] = useState("");
   // console.log({ latLng, locationErrMsg });
 
   useEffect(() => {
     if (latLng) {
       async function getNearByStores() {
         try {
-          const nearStores = await fetchCoffeeStores(latLng, 20);
+          // serverless function
+          const nearStoresRes = await fetch(
+            `api/getCoffeeStoresByLocation?latLng=${latLng}&limit=${20}`
+          );
+          const nearStores = (await nearStoresRes.json()).data;
+
+          // const nearStores = await fetchCoffeeStores(latLng, 20);
           // console.log({ nearStores });
           // setCoffeeStores(nearStores);
           dispatch({
             type: storeActionTypes.SET_COFFEE_STORES,
             payload: nearStores,
           });
+          setCoffeeStoresError("");
         } catch (error) {
           console.log(error);
           setCoffeeStoresError(error.message);
