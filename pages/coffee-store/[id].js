@@ -1,3 +1,4 @@
+import { useContext, useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Link from "next/link";
@@ -6,6 +7,8 @@ import cls from "classnames";
 
 import styles from "../../styles/coffee-store.module.css";
 import { fetchCoffeeStores } from "../../lib/coffee-stores";
+import { StoreContext } from "../../store/store-context";
+import { isEmpty } from "../../utils";
 
 export async function getStaticProps(context) {
   const { params } = context;
@@ -50,6 +53,20 @@ export async function getStaticPaths() {
 const CoffeeStore = (props) => {
   // console.log("Coffee Store Props", props);
   const router = useRouter();
+  const id = router.query?.id;
+  const {
+    state: { coffeeStores },
+  } = useContext(StoreContext);
+  const [coffeeStore, setCoffeeStore] = useState(props.coffeeStore);
+
+  useEffect(() => {
+    if (isEmpty(props.coffeeStore) && coffeeStores.length > 0) {
+      const currStore = coffeeStores.find(
+        (store) => store.id.toString() === id
+      );
+      setCoffeeStore(currStore);
+    }
+  }, [coffeeStores, id, props.coffeeStore]);
 
   if (router.isFallback) {
     return (
@@ -60,7 +77,8 @@ const CoffeeStore = (props) => {
   }
 
   // console.log(props.coffeeStore);
-  if (Object.keys(props.coffeeStore).length === 0) {
+  // if (Object.keys(props.coffeeStore).length === 0) {
+  if (isEmpty(coffeeStore)) {
     return (
       <div>
         <h2>Record not found</h2>
@@ -71,7 +89,7 @@ const CoffeeStore = (props) => {
     );
   }
 
-  const { address, name, neighbourhood, imgUrl } = props.coffeeStore;
+  const { address, name, neighbourhood, imgUrl } = coffeeStore;
 
   const handleUpvote = () => [console.log("handleUpvote")];
 
