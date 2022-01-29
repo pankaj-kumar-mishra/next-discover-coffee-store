@@ -5,6 +5,10 @@ import cls from "classnames";
 import styles from "./card.module.css";
 
 const Card = (props) => {
+  // ? scroll false will show the page as in previous position but true will show page from start
+  {
+    /* <Link scroll={true}></Link> */
+  }
   return (
     <Link href={props.href}>
       <a className={styles.cardLink}>

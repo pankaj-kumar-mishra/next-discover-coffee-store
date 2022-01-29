@@ -4,18 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import cls from "classnames";
 
-import coffeeStoresData from "../../data/coffee-stores.json";
 import styles from "../../styles/coffee-store.module.css";
+import { fetchCoffeeStores } from "../../lib/coffee-stores";
 
 export async function getStaticProps(context) {
   const { params } = context;
-  // console.log(context);
-  // {
-  //   params: { id: '1' },
-  //   locales: undefined,
-  //   locale: undefined,
-  //   defaultLocale: undefined
-  // }
+
+  const coffeeStoresData = await fetchCoffeeStores();
 
   return {
     props: {
@@ -26,7 +21,9 @@ export async function getStaticProps(context) {
   };
 }
 
-export function getStaticPaths() {
+export async function getStaticPaths() {
+  const coffeeStoresData = await fetchCoffeeStores();
+
   const paths = coffeeStoresData.map((item) => {
     return {
       params: {
@@ -39,13 +36,13 @@ export function getStaticPaths() {
 
   return {
     // paths: [{ params: { id: "0" } }, { params: { id: "1" } }],
+    paths,
     // ? it redirects to 404 page if any path not found/returned by getStaticPaths
     // fallback: false,
     /* 
     it pass that static path to getStaticProps to fetch/get data for first time 
      ? if it found then it cached it in CDN so next other users can have that data from CDN 
     */
-    paths,
     fallback: true,
   };
 }
@@ -62,7 +59,7 @@ const CoffeeStore = (props) => {
     );
   }
 
-  console.log(props.coffeeStore);
+  // console.log(props.coffeeStore);
   if (Object.keys(props.coffeeStore).length === 0) {
     return (
       <div>
