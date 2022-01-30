@@ -8,7 +8,7 @@ import { fetchCoffeeStores } from "../lib/coffee-stores";
 import { StoreContext, storeActionTypes } from "../store/store-context";
 import styles from "../styles/Home.module.css";
 
-export async function getStaticProps(context) {
+export async function getStaticProps() {
   // * use below method to get data. Example
   const coffeeStoresData = await fetchCoffeeStores();
 
@@ -20,7 +20,6 @@ export async function getStaticProps(context) {
 }
 
 const Home = (props) => {
-  // console.log("Home Props ", props);
   const { state, dispatch } = useContext(StoreContext);
   const { latLng, coffeeStores } = state;
 
@@ -28,34 +27,32 @@ const Home = (props) => {
     useTrackLocation();
   // const [coffeeStores, setCoffeeStores] = useState([]);
   const [coffeeStoresError, setCoffeeStoresError] = useState("");
-  // console.log({ latLng, locationErrMsg });
+
+  const getNearByStores = async () => {
+    try {
+      // serverless function
+      const nearStoresRes = await fetch(
+        `api/getCoffeeStoresByLocation?latLng=${latLng}&limit=${20}`
+      );
+      const nearStores = (await nearStoresRes.json()).data;
+
+      // const nearStores = await fetchCoffeeStores(latLng, 20);
+      // setCoffeeStores(nearStores);
+      dispatch({
+        type: storeActionTypes.SET_COFFEE_STORES,
+        payload: nearStores,
+      });
+      setCoffeeStoresError("");
+    } catch (error) {
+      setCoffeeStoresError(error.message);
+    }
+  };
 
   useEffect(() => {
     if (latLng) {
-      async function getNearByStores() {
-        try {
-          // serverless function
-          const nearStoresRes = await fetch(
-            `api/getCoffeeStoresByLocation?latLng=${latLng}&limit=${20}`
-          );
-          const nearStores = (await nearStoresRes.json()).data;
-
-          // const nearStores = await fetchCoffeeStores(latLng, 20);
-          // console.log({ nearStores });
-          // setCoffeeStores(nearStores);
-          dispatch({
-            type: storeActionTypes.SET_COFFEE_STORES,
-            payload: nearStores,
-          });
-          setCoffeeStoresError("");
-        } catch (error) {
-          console.log(error);
-          setCoffeeStoresError(error.message);
-        }
-      }
-
       getNearByStores();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latLng]);
 
   const handleOnNearbyClick = () => {

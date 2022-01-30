@@ -4,7 +4,8 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import cls from "classnames";
-import useSWR from "swr";
+
+// "swr": "^1.2.0"
 
 import styles from "../../styles/coffee-store.module.css";
 import { fetchCoffeeStores } from "../../lib/coffee-stores";
@@ -36,6 +37,8 @@ export async function getStaticPaths() {
     };
   });
 
+  // console.log(paths);
+
   return {
     // paths: [{ params: { id: "0" } }, { params: { id: "1" } }],
     paths,
@@ -50,24 +53,30 @@ export async function getStaticPaths() {
 }
 
 const CoffeeStore = (props) => {
+  // console.log("Coffee Store Props", props);
   const router = useRouter();
   const id = router.query?.id;
   const {
     state: { coffeeStores },
   } = useContext(StoreContext);
   const [coffeeStore, setCoffeeStore] = useState(props.coffeeStore);
-  const [voting, setVoting] = useState(0);
 
-  const { data, error, isValidating } = useSWR(
-    `/api/getCoffeeStoreById?id=${id}`
-  );
-
-  useEffect(() => {
-    if (data?.status) {
-      setCoffeeStore(data.data[0]);
-      setVoting(data.data[0].voting);
+  const handleCreateCoffeeStore = async (data) => {
+    try {
+      const options = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      };
+      const response = await fetch("/api/createCoffeeStore", options);
+      const resData = await response.json();
+      console.log(resData);
+    } catch (error) {
+      console.log(error);
     }
-  }, [data]);
+  };
 
   useEffect(() => {
     if (isEmpty(props.coffeeStore) && coffeeStores.length > 0) {
@@ -83,43 +92,6 @@ const CoffeeStore = (props) => {
     }
   }, [coffeeStores, id, props.coffeeStore]);
 
-  const handleUpvote = async () => {
-    try {
-      const options = {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      };
-      const response = await fetch("/api/updateUpvoteCoffeeStore", options);
-      const resData = await response.json();
-      if (resData.status) {
-        setVoting(resData.data[0].voting);
-      }
-    } catch (error) {
-      // console.log(error);
-    }
-  };
-
-  const handleCreateCoffeeStore = async (data) => {
-    try {
-      const options = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      };
-      await fetch("/api/createCoffeeStore", options);
-      // const response = await fetch("/api/createCoffeeStore", options);
-      // const resData = await response.json();
-      // console.log(resData);
-    } catch (error) {
-      // console.log(error);
-    }
-  };
-
   if (router.isFallback) {
     return (
       <div>
@@ -128,19 +100,9 @@ const CoffeeStore = (props) => {
     );
   }
 
-  if (error) {
-    return (
-      <div>
-        <h2>Something went wrong!!!</h2>
-        <Link href="/">
-          <a>Back to home</a>
-        </Link>
-      </div>
-    );
-  }
-
+  // console.log(props.coffeeStore);
   // if (Object.keys(props.coffeeStore).length === 0) {
-  if (isEmpty(coffeeStore) && !isValidating) {
+  if (isEmpty(coffeeStore)) {
     return (
       <div>
         <h2>Record not found</h2>
@@ -151,14 +113,17 @@ const CoffeeStore = (props) => {
     );
   }
 
+  const { address, name, neighbourhood, imgUrl } = coffeeStore;
+
+  const handleUpvote = () => {
+    console.log("handleUpvote");
+  };
+
   return (
     <div className={styles.layout}>
       <Head>
-        <title>{coffeeStore?.name}</title>
-        <meta
-          name="description"
-          content={`${coffeeStore?.name} coffee store`}
-        ></meta>
+        <title>{name}</title>
+        <meta name="description" content={`${name} coffee store`}></meta>
       </Head>
       <div className={styles.container}>
         <div className={styles.col1}>
@@ -168,17 +133,17 @@ const CoffeeStore = (props) => {
             </Link>
           </div>
           <div className={styles.nameWrapper}>
-            <h1 className={styles.name}>{coffeeStore?.name}</h1>
+            <h1 className={styles.name}>{name}</h1>
           </div>
           <Image
             src={
-              coffeeStore?.imgUrl ||
+              imgUrl ||
               "https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
             }
             width={600}
             height={360}
             className={styles.storeImg}
-            alt={coffeeStore?.name}
+            alt={name}
           />
         </div>
 
@@ -190,9 +155,9 @@ const CoffeeStore = (props) => {
               height="24"
               alt="places icon"
             />
-            <p className={styles.text}>{coffeeStore?.address}</p>
+            <p className={styles.text}>{address}</p>
           </div>
-          {coffeeStore?.neighbourhood && (
+          {neighbourhood && (
             <div className={styles.iconWrapper}>
               <Image
                 src="/static/icons/nearMe.svg"
@@ -200,7 +165,7 @@ const CoffeeStore = (props) => {
                 height="24"
                 alt="near me icon"
               />
-              <p className={styles.text}>{coffeeStore?.neighbourhood}</p>
+              <p className={styles.text}>{neighbourhood}</p>
             </div>
           )}
           <div className={styles.iconWrapper}>
@@ -210,7 +175,7 @@ const CoffeeStore = (props) => {
               height="24"
               alt="star icon"
             />
-            <p className={styles.text}>{voting}</p>
+            <p className={styles.text}>1</p>
           </div>
 
           <button className={styles.upvoteButton} onClick={handleUpvote}>
