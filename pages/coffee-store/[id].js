@@ -9,7 +9,7 @@ import useSWR from "swr";
 import styles from "../../styles/coffee-store.module.css";
 import { fetchCoffeeStores } from "../../lib/coffee-stores";
 import { StoreContext } from "../../store/store-context";
-import { isEmpty } from "../../utils";
+import { fetcher, isEmpty } from "../../utils";
 
 export async function getStaticProps(context) {
   const { params } = context;
@@ -59,7 +59,8 @@ const CoffeeStore = (props) => {
   const [voting, setVoting] = useState(0);
 
   const { data, error, isValidating } = useSWR(
-    `/api/getCoffeeStoreById?id=${id}`
+    `/api/getCoffeeStoreById?id=${id}`,
+    fetcher
   );
 
   useEffect(() => {
